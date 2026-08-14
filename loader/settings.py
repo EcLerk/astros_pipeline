@@ -11,8 +11,16 @@ class ClickhouseSettings(BaseSettings):
     password: str = None
 
 
+class ApiSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="API__", env_file=".env")
+
+    url: str
+    max_retries: int
+
+
 class Settings(BaseSettings):
     clickhouse_settings: ClickhouseSettings = ClickhouseSettings()
+    api_settings: ApiSettings = ApiSettings()
 
 
 settings = Settings()
