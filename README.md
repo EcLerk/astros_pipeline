@@ -107,7 +107,41 @@ CLICKHOUSE__PASSWORD=password
 CLICKHOUSE__DB=astros_db
 ```
 
-`dbt/astros_dbt/profiles.yml` использует те же переменные (`CLICKHOUSE__*`)
+`dbt/astros_dbt/profiles.yml` использует те же переменные (`CLICKHOUSE__*`) —
+отдельный `.env` для dbt не нужен.
+
+
+## Тесты
+
+Юнит-тесты для Python-загрузчика (`loader`) лежат в `tests/` и написаны на `pytest`.
+Реальные обращения к API и к ClickHouse в тестах замоканы — сеть и поднятая
+инфраструктура для их запуска не нужны.
+
+Что покрыто:
+
+- **`test_api.py`** — ретраи при HTTP 429 и сетевых ошибках, экспоненциальный
+  backoff, `FetchError` после исчерпания попыток, отсутствие ретраев при успехе.
+- **`test_clickhouse_client.py`** — что в ClickHouse уходит только `insert`
+  (никаких DML-операций).
+- **`test_main.py`** — оркестрация `fetch → client → insert`, отсутствие
+  обращения к ClickHouse при ошибке скачивания.
+- **`test_settings.py`** — чтение конфигурации из переменных окружения.
+
+Установка и запуск:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+```
+
+С покрытием кода:
+
+```bash
+pytest --cov=loader --cov-report=term-missing
+```
+
+dbt-часть своими тестами покрывается отдельно — через `dbt test`
+(см. раздел «Быстрый старт» выше), pytest её не проверяет.
 
 ## Структура проекта
 
@@ -117,6 +151,14 @@ astros_pipeline/
 ├── Dockerfile                    # образ для app
 ├── entrypoint.sh                 # миграции + запуск loader
 ├── requirements.txt
+├── requirements-dev.txt          # pytest + pytest-cov
+├── pytest.ini
+├── tests/
+│   ├── conftest.py
+│   ├── test_api.py
+│   ├── test_clickhouse_client.py
+│   ├── test_main.py
+│   └── test_settings.py
 ├── .env.example
 ├── clickhouse/
 │   └── migrations/
