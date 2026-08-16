@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ClickhouseSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="CLICKHOUSE__", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="CLICKHOUSE__", env_file=".env", extra="ignore")
 
     host: str = None
     port: int = None
@@ -12,7 +12,7 @@ class ClickhouseSettings(BaseSettings):
 
 
 class ApiSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="API__", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="API__", env_file=".env", extra="ignore")
 
     url: str = None
     max_retries: int = 5
