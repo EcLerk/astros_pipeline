@@ -4,6 +4,10 @@ services:
     container_name: clickhouse
     env_file:
       - .env
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE__USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE__PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE__DB}
     ports:
       - "8123:8123"
       - "9000:9000"
@@ -16,11 +20,11 @@ services:
           "CMD",
           "clickhouse-client",
           "--user",
-          "${CLICKHOUSE_USER}",
+          "${CLICKHOUSE__USER}",
           "--password",
-          "${CLICKHOUSE_PASSWORD}",
+          "${CLICKHOUSE__PASSWORD}",
           "--database",
-          "${CLICKHOUSE_DB}",
+          "${CLICKHOUSE__DB}",
           "--query",
           "SELECT 1"
         ]
@@ -28,6 +32,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+  app:
+    build: .
+    env_file:
+      - .env
+    depends_on:
+      clickhouse:
+        condition: service_healthy
 
 volumes:
   clickhouse_data:
