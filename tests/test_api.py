@@ -116,11 +116,6 @@ class TestFetchRawAstrosExhaustedRetries:
 
 
 class TestRetryConfiguration:
-    """
-    Отдельно проверяем саму конфигурацию ретраев (а не только поведение),
-    чтобы тест падал явно, если кто-то случайно поменяет параметры backoff
-    в декораторе @retry, а не только по факту неверного числа попыток.
-    """
 
     def test_stop_after_configured_max_retries(self):
         assert _get.retry.stop.max_attempt_number == settings.api_settings.max_retries
