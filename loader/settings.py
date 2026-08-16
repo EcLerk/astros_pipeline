@@ -6,7 +6,7 @@ class ClickhouseSettings(BaseSettings):
 
     host: str = None
     port: int = None
-    database: str = None
+    db: str = None
     user: str = None
     password: str = None
 
@@ -14,8 +14,8 @@ class ClickhouseSettings(BaseSettings):
 class ApiSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="API__", env_file=".env")
 
-    url: str
-    max_retries: int
+    url: str = None
+    max_retries: int = 5
 
 
 class Settings(BaseSettings):
