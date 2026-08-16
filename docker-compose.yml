@@ -41,6 +41,20 @@ services:
       clickhouse:
         condition: service_healthy
 
+  dbt:
+    build: ./dbt
+    container_name: astros_dbt
+    env_file:
+      - .env
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      app:
+        condition: service_completed_successfully
+    # dbt run выполняется один раз при старте контейнера (см. CMD в dbt/Dockerfile).
+    # Для повторных запусков: docker compose run --rm dbt run
+    # Для тестов:            docker compose run --rm dbt test
+
 volumes:
   clickhouse_data:
   clickhouse_logs:

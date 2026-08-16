@@ -1,0 +1,12 @@
+astros_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: "{{ env_var('CLICKHOUSE__HOST') }}"
+      port: "{{ env_var('CLICKHOUSE__PORT') | int }}"
+      user: "{{ env_var('CLICKHOUSE__USER') }}"
+      password: "{{ env_var('CLICKHOUSE__PASSWORD') }}"
+      schema: "{{ env_var('CLICKHOUSE__DB') }}"
+      secure: False
+      threads: 2

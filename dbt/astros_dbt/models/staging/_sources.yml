@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: astros
+    schema: "{{ env_var('CLICKHOUSE__DB') }}"
+    description: >
+      Tables populated by the Python loader (astros_raw) and by
+      ClickHouse's materialized view (people).
+      dbt does not create or write to them directly — read-only.
+    tables:
+      - name: astros_raw
+        description: "Raw JSON response from the open-notify.org/astros.json API"
+        columns:
+          - name: payload
+            description: "Response body as a JSON string"
+          - name: _inserted_at
+            description: "Timestamp when the record was inserted by the Python loader"
+
+      - name: people
+        description: >
+          Parsed records of people currently in orbit. Populated automatically
+          by the mv_raw_to_people materialized view on every insert into astros_raw.
+        columns:
+          - name: craft
+            description: "Name of the spacecraft/station"
+          - name: name
+            description: "Astronaut's name"
+          - name: _inserted_at
+            description: "Timestamp of the original insert into astros_raw (inherited via the MV)"

@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: craft_crew_summary
+    description: "Crew summary: number and list of people on each spacecraft/station"
+    columns:
+      - name: craft
+        description: "Name of the spacecraft/station"
+        tests:
+          - not_null
+          - unique
+      - name: crew_size
+        description: "Number of people on board"
+        tests:
+          - not_null
+      - name: crew_members
+        description: "Sorted list of crew member names"
