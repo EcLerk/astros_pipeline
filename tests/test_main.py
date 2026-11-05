@@ -1,38 +1,46 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
+from clickhouse_connect.driver.exceptions import OperationalError
 
 from loader.api.exceptions import FetchError
 from loader.main import run
+from loader.settings import settings
 
 
 class TestRunHappyPath:
-    @patch("loader.main.insert_astros_raw")
-    @patch("loader.main.get_clickhouse_client")
+    @patch("loader.main.load_astros_raw")
     @patch("loader.main.fetch_raw_astros")
-    def test_fetches_creates_client_and_inserts_in_order(
-        self, mock_fetch, mock_get_client, mock_insert
-    ):
+    def test_fetches_then_loads_payload_into_clickhouse(self, mock_fetch, mock_load):
         mock_fetch.return_value = '{"people": []}'
-        mock_client = MagicMock()
-        mock_get_client.return_value = mock_client
 
         run()
 
         mock_fetch.assert_called_once()
-        mock_get_client.assert_called_once()
-        mock_insert.assert_called_once_with(mock_client, '{"people": []}')
+        mock_load.assert_called_once_with(settings, '{"people": []}')
 
 
 class TestRunFetchFailure:
-    @patch("loader.main.get_clickhouse_client")
+    @patch("loader.main.load_astros_raw")
     @patch("loader.main.fetch_raw_astros")
-    def test_propagates_fetch_error_and_skips_clickhouse(
-        self, mock_fetch, mock_get_client
-    ):
+    def test_propagates_fetch_error_and_skips_clickhouse(self, mock_fetch, mock_load):
         mock_fetch.side_effect = FetchError("all retries exhausted")
 
         with pytest.raises(FetchError):
             run()
 
-        mock_get_client.assert_not_called()
+        mock_load.assert_not_called()
+
+
+class TestRunLoadFailure:
+    @patch("loader.main.load_astros_raw")
+    @patch("loader.main.fetch_raw_astros")
+    def test_propagates_clickhouse_error_uncaught(self, mock_fetch, mock_load):
+        mock_fetch.return_value = '{"people": []}'
+        error = OperationalError("clickhouse unreachable")
+        mock_load.side_effect = error
+
+        with pytest.raises(OperationalError) as exc_info:
+            run()
+
+        assert exc_info.value is error

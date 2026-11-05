@@ -57,6 +57,16 @@ API (astros.json)
 - После `API__MAX_RETRIES` (по умолчанию 5) неудачных попыток подряд выбрасывается
   `FetchError`, и загрузка прерывается.
 
+Вставка в ClickHouse (`astros_raw`) тоже оборачивается ретраями через `tenacity`:
+
+- Повтор выполняется только при `OperationalError` — временных ошибках соединения
+  или транспорта ClickHouse. Остальные ошибки драйвера пробрасываются сразу, без повтора.
+- Таймаут между попытками растёт экспоненциально (`wait_exponential`, от 1 до 32 секунд).
+- Число попыток задаётся `CLICKHOUSE__MAX_RETRIES` (по умолчанию 5). После исчерпания
+  попыток исходное исключение пробрасывается без изменений.
+- Доставка — at-least-once: повторная вставка может создать дубликат строки
+  в `astros_raw`/`people`; такие дубликаты убирает дедупликация в dbt-модели `stg_people`.
+
 ## Требования
 
 - Docker и Docker Compose
@@ -105,6 +115,7 @@ CLICKHOUSE__PORT=8123
 CLICKHOUSE__USER=default
 CLICKHOUSE__PASSWORD=password
 CLICKHOUSE__DB=astros_db
+CLICKHOUSE__MAX_RETRIES=5
 ```
 
 `dbt/astros_dbt/profiles.yml` использует те же переменные (`CLICKHOUSE__*`) —
@@ -122,7 +133,8 @@ CLICKHOUSE__DB=astros_db
 - **`test_api.py`** — ретраи при HTTP 429 и сетевых ошибках, экспоненциальный
   backoff, `FetchError` после исчерпания попыток, отсутствие ретраев при успехе.
 - **`test_clickhouse_client.py`** — что в ClickHouse уходит только `insert`
-  (никаких DML-операций).
+  (никаких DML-операций), ретраи вставки при `OperationalError`, backoff,
+  проброс исходной ошибки после исчерпания попыток, отсутствие ретраев для прочих ошибок.
 - **`test_main.py`** — оркестрация `fetch → client → insert`, отсутствие
   обращения к ClickHouse при ошибке скачивания.
 - **`test_settings.py`** — чтение конфигурации из переменных окружения.

@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +10,8 @@ class ClickhouseSettings(BaseSettings):
     db: str = None
     user: str = None
     password: str = None
+    # Total insert attempts (first try included), same convention as ApiSettings.max_retries.
+    max_retries: int = Field(default=5, ge=1)
 
 
 class ApiSettings(BaseSettings):

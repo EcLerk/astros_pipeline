@@ -2,7 +2,7 @@ import logging
 
 from loader.api.api import fetch_raw_astros
 from loader.api.exceptions import FetchError
-from loader.clickhouse_client import get_clickhouse_client, insert_astros_raw
+from loader.clickhouse_client import load_astros_raw
 from loader.settings import settings
 
 logging.basicConfig(
@@ -19,8 +19,7 @@ def run() -> None:
         logger.exception("Failed to download data after all retry attempts")
         raise
 
-    client = get_clickhouse_client(settings)
-    insert_astros_raw(client, payload)
+    load_astros_raw(settings, payload)
     logger.info("Done: raw data loaded into astros_raw")
 
 

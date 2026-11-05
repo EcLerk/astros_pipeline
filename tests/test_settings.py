@@ -1,3 +1,6 @@
+import pytest
+from pydantic import ValidationError
+
 from loader.settings import ApiSettings, ClickhouseSettings
 
 
@@ -24,6 +27,27 @@ class TestClickhouseSettings:
 
         assert config.port == 8123
         assert isinstance(config.port, int)
+
+    def test_max_retries_defaults_to_five_when_unset(self, monkeypatch):
+        monkeypatch.delenv("CLICKHOUSE__MAX_RETRIES", raising=False)
+
+        config = ClickhouseSettings(_env_file=None)
+
+        assert config.max_retries == 5
+
+    def test_max_retries_overridable_from_env(self, monkeypatch):
+        monkeypatch.setenv("CLICKHOUSE__MAX_RETRIES", "3")
+
+        config = ClickhouseSettings()
+
+        assert config.max_retries == 3
+
+    @pytest.mark.parametrize("value", ["0", "-1"], ids=["zero", "negative"])
+    def test_max_retries_below_one_is_rejected(self, monkeypatch, value):
+        monkeypatch.setenv("CLICKHOUSE__MAX_RETRIES", value)
+
+        with pytest.raises(ValidationError, match="max_retries"):
+            ClickhouseSettings()
 
 
 class TestApiSettings:
